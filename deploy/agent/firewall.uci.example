@@ -1,0 +1,45 @@
+# ==============================================================================
+# OpenWrt / iStoreOS fw4 集合与转发规则示例
+#
+# 追加到 /etc/config/firewall 后执行：
+#   uci commit firewall
+#   fw4 reload
+#
+# 注意：
+#   - rdp6_open 是 IPv6 目标集合，agent 写入目标机 GUA；
+#   - rdp4_clients 是 IPv4 源集合，agent 写入 2FA 客户端源地址；
+#   - 集合为空时规则不匹配，保持默认拒绝，不存在 fail-open；
+#   - 端口与 90-rdp4-dnat.nft 中的 DNAT 目标保持一致。
+# ==============================================================================
+
+config ipset
+    option name 'rdp6_open'
+    option family 'ipv6'
+    list match 'dest_ip'
+    option timeout '180'
+
+config rule
+    option name 'Allow-RDP6-dynamic'
+    option src 'wan'
+    option dest 'lan'
+    option family 'ipv6'
+    option proto 'tcp'
+    option dest_port '3389'
+    option ipset 'rdp6_open'
+    option target 'ACCEPT'
+
+config ipset
+    option name 'rdp4_clients'
+    option family 'ipv4'
+    list match 'src_ip'
+    option timeout '300'
+
+config rule
+    option name 'Allow-RDP4-dynamic'
+    option src 'wan'
+    option dest 'lan'
+    option family 'ipv4'
+    option proto 'tcp'
+    option dest_port '3389'
+    option ipset 'rdp4_clients'
+    option target 'ACCEPT'

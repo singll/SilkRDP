@@ -1,0 +1,21 @@
+[Unit]
+Description=SilkRDP gateway (2FA authorization page + TCP/UDP relay)
+Documentation=https://github.com/singll/SilkRDP
+After=network-online.target nftables-rdp.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rdpgw
+Group=rdpgw
+EnvironmentFile=/etc/rdp-gateway.env
+ExecStart=/opt/rdp-gateway/rdp-gateway
+Restart=always
+RestartSec=3
+TimeoutStopSec=10
+PrivateTmp=true
+ProtectHome=true
+NoNewPrivileges=false
+
+[Install]
+WantedBy=multi-user.target

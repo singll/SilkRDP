@@ -1,0 +1,11 @@
+/bin/
+/dist/
+*.env
+!*.env.example
+*.log
+*.state
+**/state.json
+**/token
+.DS_Store
+.vscode/
+.idea/

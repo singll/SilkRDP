@@ -1,0 +1,3 @@
+# rdp-gateway 仅允许对 rdp_guard.allowed_ips 做增删。
+# 安装到 /etc/sudoers.d/rdp-gateway，权限 0440 root:root，并用 visudo -cf 校验。
+rdpgw ALL=(root) NOPASSWD: /usr/sbin/nft add element inet rdp_guard allowed_ips *, /usr/sbin/nft delete element inet rdp_guard allowed_ips *

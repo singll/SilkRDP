@@ -1,0 +1,36 @@
+#!/usr/sbin/nft -f
+# ==============================================================================
+# SilkRDP 公网侧 nftables 白名单
+#
+# 安装到 /etc/nftables.d/rdp_guard.nft，由 nftables-rdp.service 加载。
+# 说明：
+#   - allowed_ips 由 rdp-gateway 通过受限 sudoers 动态增删；
+#   - tcp/udp 33890 必须先 accept 白名单，再显式 drop，防止 fail-open；
+#   - udp 3478 仅在启用内嵌 DERP/STUN 时需要，可按实际环境删除。
+# ==============================================================================
+
+table inet rdp_guard {
+    set allowed_ips {
+        type ipv4_addr
+        flags timeout
+        timeout 3m
+    }
+
+    chain input {
+        type filter hook input priority 0; policy accept;
+
+        ct state established,related accept
+        iif "lo" accept
+
+        # STUN / 内嵌 DERP；不需要时删除这一行
+        udp dport 3478 accept
+
+        # 白名单内的客户端才允许进入 TCP/UDP 中转
+        tcp dport 33890 ip saddr @allowed_ips accept
+        udp dport 33890 ip saddr @allowed_ips accept
+
+        # 显式关闭未授权流量，避免 policy accept 造成 fail-open
+        tcp dport 33890 drop
+        udp dport 33890 drop
+    }
+}

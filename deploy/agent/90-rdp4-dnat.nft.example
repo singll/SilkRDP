@@ -1,0 +1,33 @@
+#!/usr/sbin/nft -f
+# ==============================================================================
+# 家庭侧 IPv4 直连 DNAT 示例（OpenWrt / iStoreOS fw4 include）
+#
+# 这是示例，不是可直接套用的生产配置。复制到：
+#   /etc/nftables.d/90-rdp4-dnat.nft
+# 然后按你的实际接口、内网地址、端口修改，并执行：
+#   fw4 reload
+#
+# 设计要点：
+#   - 只允许 rdp4_clients 集合内的源命中 DNAT；
+#   - 只做 TCP（避开 PPPoE MTU 对 UDP 的 PMTUD 黑洞）；
+#   - 必须同时存在 uci 的 Allow-RDP4-dynamic 转发规则；
+#   - 集合由 rdp6-agent 动态写入，空集合 = 端口关闭。
+#
+# 说明：fw4 会把 /etc/nftables.d/*.nft 合并到 table inet fw4 内。
+# 不同 OpenWrt 版本的链名可能不同，请先用 `nft list ruleset` 确认
+# 实际 prerouting / dstnat 链名，再调整下面示例。
+# ==============================================================================
+
+chain dstnat_rdp4 {
+    type nat hook prerouting priority dstnat - 5; policy accept;
+
+    iifname "pppoe-wan" tcp dport 33891 ip saddr @rdp4_clients \
+        dnat ip to 192.168.1.100:3389
+}
+
+chain srcnat_rdp4 {
+    type nat hook postrouting priority srcnat; policy accept;
+
+    oifname "br-lan" ip saddr @rdp4_clients ip daddr 192.168.1.100 \
+        tcp dport 3389 snat ip to 192.168.1.1
+}

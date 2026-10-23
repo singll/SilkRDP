@@ -1,0 +1,14 @@
+[Unit]
+Description=SilkRDP nftables guard table
+Documentation=https://github.com/singll/SilkRDP
+After=network-pre.target
+Before=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/nftables.d/rdp_guard.nft
+ExecStop=-/usr/sbin/nft delete table inet rdp_guard
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+# Caddy + Authelia 示例。
+# 关键点：
+#   1. 先 forward_auth，未通过 2FA 不允许访问授权页；
+#   2. header_up X-Real-IP 覆写为 Caddy 看到的真实对端地址，防止客户端伪造；
+#   3. 授权页只监听 127.0.0.1:8090。
+
+rdp.example.com {
+    forward_auth 127.0.0.1:9091 {
+        uri /api/verify?rd=https://auth.example.com/
+    }
+
+    reverse_proxy 127.0.0.1:8090 {
+        header_up X-Real-IP {remote_host}
+    }
+}
